@@ -1,0 +1,15 @@
+[lang="ko"] {
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+#kokatakana table {
+  border-collapse: collapse;
+}
+
+#kokatakana th,
+td {
+  border: 1px solid #555;
+  height: 50px;
+  padding: 8px;
+  width: 50px;
+}
