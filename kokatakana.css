@@ -1,5 +1,17 @@
+[lang="ja"] {
+  cursor: pointer;
+  font-family: "Noto Sans JP", sans-serif;
+}
+[lang="ja"]:hover {
+  background-color: #eee;
+}
+
 [lang="ko"] {
+  cursor: pointer;
   font-family: "Noto Sans KR", sans-serif;
+}
+[lang="ko"]:hover {
+  background-color: #eee;
 }
 
 #kokatakana table {

@@ -1,3 +1,5 @@
+const LANGS = ["ko", "ja"];
+
 const KATAKANA = [
   ["ア", "イ", "ウ", "エ", "オ"],
   ["カ", "キ", "ク", "ケ", "コ"],
@@ -40,8 +42,10 @@ const CONSONANT_MAP = {
 
 const Y_MAP = {
   a: "ᅣ",
-  i: "",
+  // Unused
+  i: "ᅵ",
   u: "ᅲ",
+  // Unused
   e: "ᅨ",
   o: "ᅭ",
 };
@@ -49,6 +53,7 @@ const Y_MAP = {
 const W_MAP = {
   a: "ᅪ",
   i: "ᅬ",
+  // Unused
   u: "ᅮ",
   e: "ᅰ",
   o: "ᅯ",
@@ -63,13 +68,54 @@ function combineSyllables(initial, medial) {
   return String.fromCharCode(588 * initialCode + 28 * medialCode + 44032);
 }
 
+function getVoicesMap(langs) {
+  let makeLangToVoices = (voices, langs) => {
+    let result = {};
+    for (let voice of voices) {
+      for (let lang of langs) {
+        if (voice.lang.indexOf(lang) === 0) {
+          if (!result[lang]) {
+            result[lang] = [];
+          }
+          result[lang].push(voice);
+        }
+      }
+    }
+    return result;
+  };
+  return new Promise((resolve, reject) => {
+    let result = makeLangToVoices(window.speechSynthesis.getVoices(), langs);
+    if (Object.keys(result).length === langs.length) {
+      resolve(result);
+    } else {
+      const timeoutId = setTimeout(
+        () => reject("Timed out getting voices"),
+        5000,
+      );
+      window.speechSynthesis.addEventListener("voiceschanged", () => {
+        let result = makeLangToVoices(
+          window.speechSynthesis.getVoices(),
+          langs,
+        );
+        const foundLangs = Object.keys(result);
+        if (foundLangs.length === langs.length) {
+          clearTimeout(timeoutId);
+          resolve(result);
+        } else {
+          reject(`Missing langs; only got: ${foundLangs.join(", ")}`);
+        }
+      });
+    }
+  });
+}
+
 const parent = document.getElementById("kokatakana");
 const table = document.createElement("table");
 const vowelsTr = document.createElement("tr");
 vowelsTr.appendChild(document.createElement("th"));
 for (let romajiVowel of ROMAJI_VOWELS) {
   const th = document.createElement("th");
-  th.innerHTML = `${romajiVowel} <span lang="ko">(${VOWEL_MAP[romajiVowel]})</span>`;
+  th.innerHTML = `${romajiVowel} (<span lang="ko">${VOWEL_MAP[romajiVowel]}</span>)`;
   vowelsTr.appendChild(th);
 }
 table.appendChild(vowelsTr);
@@ -77,10 +123,12 @@ for (let i = 0; i < ROMAJI_CONSONANTS.length; i++) {
   const tr = document.createElement("tr");
   const romajiConsonant = ROMAJI_CONSONANTS[i];
   const hangulConsonant = CONSONANT_MAP[romajiConsonant];
+  const hangulConsonantHtml =
+    hangulConsonant == NG ? "-" : `<span lang="ko">${hangulConsonant}</span>`;
   const th = document.createElement("th");
   tr.appendChild(th);
   th.innerHTML = romajiConsonant
-    ? `${romajiConsonant} <span lang="ko">(${CONSONANT_MAP[romajiConsonant]})</span>`
+    ? `${romajiConsonant} (${hangulConsonantHtml})`
     : "";
   for (let j = 0; j < ROMAJI_VOWELS.length; j++) {
     const romajiVowel = ROMAJI_VOWELS[j];
@@ -93,10 +141,22 @@ for (let i = 0; i < ROMAJI_CONSONANTS.length; i++) {
     const katakana = KATAKANA[i][j];
     const td = document.createElement("td");
     td.innerHTML = katakana
-      ? `${katakana} <span lang="ko">(${combineSyllables(hangulConsonant, hangulVowel)})</span>`
+      ? `<span lang="ja">${katakana}</span> (<span lang="ko">${combineSyllables(hangulConsonant, hangulVowel)}</span>)`
       : "";
     tr.appendChild(td);
   }
   table.appendChild(tr);
 }
 parent.appendChild(table);
+
+const langToVoices = await getVoicesMap(LANGS);
+const speakInTargetLang = (event) => {
+  if (LANGS.includes(event?.target?.lang)) {
+    const utterance = new SpeechSynthesisUtterance(event.target.textContent);
+    utterance.voice = langToVoices[event.target.lang][0];
+    window.speechSynthesis.speak(utterance);
+  }
+};
+[...parent.querySelectorAll("[lang]")].forEach((e) =>
+  e.addEventListener("click", speakInTargetLang),
+);
