@@ -126,6 +126,7 @@ function getVoicesMap(langs) {
 
 function createHtmlTable(basicSyllabary) {
   const table = document.createElement("table");
+  table.classList.add("kokatana-table");
   const vowelsTr = document.createElement("tr");
   vowelsTr.appendChild(document.createElement("th"));
   for (let romajiVowel of ROMAJI_VOWELS) {
@@ -142,9 +143,9 @@ function createHtmlTable(basicSyllabary) {
       hangulConsonant == NG ? "-" : `<span lang="ko">${hangulConsonant}</span>`;
     const th = document.createElement("th");
     tr.appendChild(th);
-    th.innerHTML = romajiConsonant
-      ? `${romajiConsonant} (${hangulConsonantHtml})`
-      : "";
+    if (romajiConsonant) {
+      th.innerHTML = `${romajiConsonant} (${hangulConsonantHtml})`;
+    }
     for (let j = 0; j < ROMAJI_VOWELS.length; j++) {
       const romajiVowel = ROMAJI_VOWELS[j];
       let hangulVowel = VOWEL_MAP[romajiVowel];
@@ -155,9 +156,16 @@ function createHtmlTable(basicSyllabary) {
       }
       const symbol = basicSyllabary[i][j];
       const td = document.createElement("td");
-      td.innerHTML = symbol
-        ? `<span lang="ja">${symbol}</span> (<span lang="ko">${combineSyllables(hangulConsonant, hangulVowel)}</span>)`
-        : "";
+      const makeSpeakable = (lang, text) =>
+        `<span class="speakable" role="button" lang="${lang}">${text}</span>`;
+      if (symbol) {
+        td.innerHTML = [
+          makeSpeakable("ja", symbol),
+          " (",
+          makeSpeakable("ko", combineSyllables(hangulConsonant, hangulVowel)),
+          ")",
+        ].join("");
+      }
       tr.appendChild(td);
     }
     table.appendChild(tr);
@@ -182,6 +190,6 @@ const speakInTargetLang = (event) => {
     window.speechSynthesis.speak(utterance);
   }
 };
-[...document.querySelectorAll("[lang]")].forEach((e) =>
+[...document.querySelectorAll(".speakable[lang]")].forEach((e) =>
   e.addEventListener("click", speakInTargetLang),
 );

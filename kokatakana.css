@@ -1,24 +1,23 @@
 [lang="ja"] {
-  cursor: pointer;
   font-family: "Noto Sans JP", sans-serif;
-}
-[lang="ja"]:hover {
-  background-color: #eee;
 }
 
 [lang="ko"] {
-  cursor: pointer;
   font-family: "Noto Sans KR", sans-serif;
 }
-[lang="ko"]:hover {
+.speakable {
+  cursor: pointer;
+  user-select: none;
+}
+.speakable:hover {
   background-color: #eee;
 }
 
-#kokatakana table {
+.katakana-table {
   border-collapse: collapse;
 }
 
-#kokatakana th,
+.katakana-table th,
 td {
   border: 1px solid #555;
   height: 50px;
